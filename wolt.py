@@ -46,6 +46,12 @@ def locationAvailable(pointarray, point):
     polygon = Polygon(pointarray);
     return(polygon.contains(point));
 
+def getEnglishName(arr,origname):
+    for a in arr:
+        if a["lang"] == 'en':
+           return a["value"];
+    return origname;
+
 
 arglist=sys.argv
 if len(arglist) < 2:
@@ -71,14 +77,15 @@ while(True):
         RESTALIVE=JSON["results"][0]["alive"];
         RESTDELV=JSON["results"][0]["delivery_specs"]["delivery_enabled"];
         RESTTOLOCATION=locationAvailable(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location);
+        RESTNAME=getEnglishName(JSON["results"][0]["name"],rest);
         if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and (RESTTOLOCATION == True)):
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + rest+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
             if push=="true":
-                sendpush(rest + " is Open");
+                sendpush(RESTNAME + " is Open");
                 print("Push sent");
                 sys.exit(0);
         else:
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + rest+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='');
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='');
             if RESTONLINE == False:
                 print("(Offline)");
             elif RESTALIVE != 1:
