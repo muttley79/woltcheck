@@ -5,6 +5,11 @@ import requests
 import json
 import datetime
 import http.client, urllib
+import configparser
+from decimal import Decimal
+
+config = configparser.RawConfigParser()
+config.read('config.properties')
 
 # Must install shapely
 from shapely.geometry import Point
@@ -13,7 +18,8 @@ from shapely.geometry.polygon import Polygon
 sys.tracebacklimit = 0
 
 #remember to change this
-work_location = Point(longitude, latitude);
+work_location = Point(Decimal(config.get('Location','workplace.longitude')), Decimal(config.get('Location','workplace.latitude')));
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -30,8 +36,8 @@ def sendpush(text):
     conn = http.client.HTTPSConnection("api.pushover.net:443")
     conn.request("POST", "/1/messages.json",
     urllib.parse.urlencode({
-    "token": "TOKEN",
-    "user": "USER",
+    "token": config.get('Push','push.token'),
+    "user": config.get('Push','push.user'),
     "message": text,
      }), { "Content-type": "application/x-www-form-urlencoded" })
     conn.getresponse()
