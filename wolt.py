@@ -20,6 +20,24 @@ sys.tracebacklimit = 0
 #remember to change this
 work_location = Point(Decimal(config.get('Location','workplace.longitude')), Decimal(config.get('Location','workplace.latitude')));
 
+def isOpenNow(opening_times):
+    today = datetime.datetime.now().strftime("%A").lower();
+    if opening_times[today]==[]:
+       return False;
+    now = datetime.datetime.now();
+    current=(((now.hour*60)+now.minute)*60000)
+    for a in opening_times[today]:
+        if a["value"]["$date"] > current:
+           if a["type"] == "open":
+              return False;
+           else:
+              return True;
+        else:
+           if a["type"] == "open":
+              return True;
+           else:
+              return False;
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -78,7 +96,8 @@ while(True):
         RESTDELV=JSON["results"][0]["delivery_specs"]["delivery_enabled"];
         RESTTOLOCATION=locationAvailable(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location);
         RESTNAME=getEnglishName(JSON["results"][0]["name"],rest);
-        if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and (RESTTOLOCATION == True)):
+        RESTOPENHOURS=isOpenNow(JSON["results"][0]["opening_times"]);
+        if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and (RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
             if push=="true":
                 sendpush(RESTNAME + " is Open");
@@ -86,7 +105,9 @@ while(True):
                 sys.exit(0);
         else:
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='');
-            if RESTONLINE == False:
+            if RESTOPENHOURS == False:
+                print("(Outside of open hours)");
+            elif RESTONLINE == False:
                 print("(Offline)");
             elif RESTALIVE != 1:
                 print("(Not Alive)");
