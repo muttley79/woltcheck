@@ -11,10 +11,13 @@ If you wold like to get a push to your phone, you will need to update the functi
 
 Usage:
 ./wolt.py [-p] restaurant [restaurant] ...
--p send push when the first restaurant is availeble
+-p send push when the first restaurant is available
   NOTE - this requires edit of the sendpush function to use your push provider
 
 restaurant name is taken from the wolt url
 example: https://wolt.com/en/isr/tel-aviv/restaurant/cafe-noir
   in this case "cafe-noir" is the restaurant name
+
+Be Aware - This script may give you "false positive" when used outside of restaurant working hours. 
+It is intended to be used to check when a venue becomes temporarily offline and to alert when it becomes back online
   
