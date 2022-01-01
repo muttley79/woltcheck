@@ -32,7 +32,7 @@ def isOpenNow(opening_times):
               return False;
            else:
               return True;
-        else:
+        elif (len(opening_times[today])==1 or opening_times[today].index(a) == len(opening_times[today])-1):
            if a["type"] == "open":
               return True;
            else:
