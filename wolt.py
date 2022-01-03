@@ -113,7 +113,7 @@ while(True):
              RESTTOLOCATION=locationAvailable(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location);
         RESTNAME=getEnglishName(JSON["results"][0]["name"],rest);
         RESTOPENHOURS=isOpenNow(JSON["results"][0]["opening_times"]);
-        if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLICATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
+        if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLOCATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
             alertmac(RESTNAME, 'Open');
             if push=="true":
