@@ -9,6 +9,16 @@ import configparser
 from decimal import Decimal
 from os.path import exists
 import os
+import subprocess
+
+CMD = '''
+on run argv
+  display notification (item 2 of argv) with title (item 1 of argv)
+end run
+'''
+
+def notify(title, text):
+  subprocess.call(['osascript', '-e', CMD, title, text])
 
 
 config = configparser.RawConfigParser()
@@ -33,7 +43,8 @@ def alertmac(name, newstate):
     if state != newstate:
        state = newstate;
        if exists("/usr/bin/osascript"):
-          os.system('/usr/bin/osascript -e "display notification \"' + name + ' is ' + state);
+           notify("Wolt checker", name + " is " + state)
+#          os.system("/usr/bin/osascript -e \"display notification \"' + name + ' is ' + state);
           
 def isOpenNow(opening_times):
     today = datetime.datetime.now().strftime("%A").lower();
