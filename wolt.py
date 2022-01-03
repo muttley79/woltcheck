@@ -28,6 +28,7 @@ config.read('config.properties')
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
+
 sys.tracebacklimit = 0
 
 longitude = config.get('Location','workplace.longitude');
@@ -39,10 +40,16 @@ else:
 
 def alertmac(rest, title, newstate):
     global rests;
+    wsl_notification_path = config.get('General','wsl.notification.path');
     if rests[rest] != newstate:
        rests[rest] = newstate;
        if exists("/usr/bin/osascript"):
-           notify("Wolt checker", title + " is " + rests[rest])
+           notify("Wolt checker", title + " is " + rests[rest]);
+       if exists(wsl_notification_path + 'wsl-notify-send.exe'):
+           subprocess.call([wsl_notification_path + 'wsl-notify-send.exe','--appId',"Wolt Checker",'-c',"Restaurant status Changed",title + ' is now ' + newstate]);
+
+
+       
           
 def isOpenNow(opening_times):
     today = datetime.datetime.now().strftime("%A").lower();

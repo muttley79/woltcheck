@@ -5,3 +5,8 @@ workplace.latitude=
 [Push]
 push.token=
 push.user=
+
+[General]
+# For use of wsl-notify-send.exe from https://github.com/stuartleeks/wsl-notify-send/
+# In case you are using WSL of course. Path is in the form of /mnt/g/utils/ ...
+wsl.notification.path=
