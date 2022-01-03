@@ -1,6 +1,8 @@
 # woltcheck
 Python script to check if a wolt restaurant is ready to deliver to your location
 
+![alt text](https://user-images.githubusercontent.com/6189366/147935485-932caef9-9c83-4541-9c1e-449eadd340a8.png?raw=true)
+
 Prerequisits:
 - Install shapely and configparser (python3 -m pip install shapely configparser)
 - Install libgeos-dev (apt-get install libgeos-dev)
