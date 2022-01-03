@@ -28,7 +28,7 @@ config.read('config.properties')
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
-#sys.tracebacklimit = 0
+sys.tracebacklimit = 0
 
 longitude = config.get('Location','workplace.longitude');
 latitude = config.get('Location','workplace.latitude');
@@ -115,6 +115,8 @@ rests={}
 for rest in arglist:
     print("Adding resturant "+rest+" for monitoring")
     rests[rest]="Closed"
+
+print();
 
 while(True):
     for rest in rests:
