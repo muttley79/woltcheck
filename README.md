@@ -21,4 +21,7 @@ restaurant name is taken from the wolt url
 example: https://wolt.com/en/isr/tel-aviv/restaurant/cafe-noir
   in this case "cafe-noir" is the restaurant name
 
-  
+Added support for notifications for MAC or WINDOWS (via WSL only for now)
+If you want WSL notifications you will need to download this project:
+https://github.com/stuartleeks/wsl-notify-send
+and set the path for the exe in the config file
