@@ -37,14 +37,12 @@ if (longitude == '' or latitude == ''):
 else:
    work_location = Point(Decimal(longitude), Decimal(latitude));
 
-state='Closed';
-def alertmac(name, newstate):
-    global state;
-    if state != newstate:
-       state = newstate;
+def alertmac(rest, title, newstate):
+    global rests;
+    if rests[rest] != newstate:
+       rests[rest] = newstate;
        if exists("/usr/bin/osascript"):
-           notify("Wolt checker", name + " is " + state)
-#          os.system("/usr/bin/osascript -e \"display notification \"' + name + ' is ' + state);
+           notify("Wolt checker", title + " is " + rests[rest])
           
 def isOpenNow(opening_times):
     today = datetime.datetime.now().strftime("%A").lower();
@@ -113,8 +111,13 @@ if len(arglist) == 0:
     print("No restaurant[s] supplied")
     sys.exit(1);
 
+rests={}
+for rest in arglist:
+    print("Adding resturant "+rest+" for monitoring")
+    rests[rest]="Closed"
+
 while(True):
-    for rest in arglist:
+    for rest in rests:
         #print(rest);
         JSON=json.loads(requests.get("https://restaurant-api.wolt.com/v3/venues/slug/"+rest).text);
         RESTONLINE=JSON["results"][0]["online"];
@@ -126,7 +129,7 @@ while(True):
         RESTOPENHOURS=isOpenNow(JSON["results"][0]["opening_times"]);
         if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLOCATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
-            alertmac(RESTNAME, 'Open');
+            alertmac(rest, RESTNAME, 'Open');
             if push=="true":
                 sendpush(RESTNAME + " is Open");
                 print("Push sent");
