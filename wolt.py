@@ -135,7 +135,7 @@ while(True):
                 print("Push sent");
                 sys.exit(0);
         else:
-            alertmac(RESTNAME, 'Closed');
+            alertmac(rest, RESTNAME, 'Closed');
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='');
             if RESTOPENHOURS == False:
                 print("(Outside of open hours)");
