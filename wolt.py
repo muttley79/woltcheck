@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import sys
 import time
 import requests
@@ -7,6 +7,9 @@ import datetime
 import http.client, urllib
 import configparser
 from decimal import Decimal
+from os.path import exists
+import os
+
 
 config = configparser.RawConfigParser()
 config.read('config.properties')
@@ -15,11 +18,23 @@ config.read('config.properties')
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
-#remember to change this
-work_location = Point(Decimal(config.get('Location','workplace.longitude')), Decimal(config.get('Location','workplace.latitude')));
+longitude = config.get('Location','workplace.longitude');
+latitude = config.get('Location','workplace.latitude');
+if (longitude == '' or latitude == ''):
+   print("No Workplace defined, workplace check will be ignored and checkup may be inaccurate");
+else:
+   work_location = Point(Decimal(longitude), Decimal(latitude));
 
+state='Closed';
+def alertmac(name, newstate):
+    global state;
+    if state != newstate:
+       state = newstate;
+       if exists("/usr/bin/osascript"):
+          os.system('/usr/bin/osascript -e "display notification \"' + name + ' is ' + state);
+          
 def isOpenNow(opening_times):
     today = datetime.datetime.now().strftime("%A").lower();
     if opening_times[today]==[]:
@@ -94,16 +109,19 @@ while(True):
         RESTONLINE=JSON["results"][0]["online"];
         RESTALIVE=JSON["results"][0]["alive"];
         RESTDELV=JSON["results"][0]["delivery_specs"]["delivery_enabled"];
-        RESTTOLOCATION=locationAvailable(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location);
+        if 'work_location' in locals(): 
+             RESTTOLOCATION=locationAvailable(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location);
         RESTNAME=getEnglishName(JSON["results"][0]["name"],rest);
         RESTOPENHOURS=isOpenNow(JSON["results"][0]["opening_times"]);
-        if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and (RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
+        if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLICATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
+            alertmac(RESTNAME, 'Open');
             if push=="true":
                 sendpush(RESTNAME + " is Open");
                 print("Push sent");
                 sys.exit(0);
         else:
+            alertmac(RESTNAME, 'Closed');
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='');
             if RESTOPENHOURS == False:
                 print("(Outside of open hours)");
@@ -113,6 +131,8 @@ while(True):
                 print("(Not Alive)");
             elif RESTDELV == False:
                 print("(No Delivery)");
-            elif RESTTOLOCATION == False:
+            elif ('RESTTOLOCATION' in locals() and RESTTOLOCATION == False):
                 print("(Not delivering to our location)");
+            else:
+                print('(Unknown reason, most likely coordinates)');
     time.sleep(10);
