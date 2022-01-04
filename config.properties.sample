@@ -1,10 +1,12 @@
 [Location]
+# longitude & latitude can be obtain here: https://www.latlong.net
 workplace.longitude=
 workplace.latitude=
 
 [Push]
-push.token=
-push.user=
+# Using Apprise you can send notifications in mulriple channels.
+# Read here for more details: https://github.com/caronc/apprise
+push.notifiers
 
 [General]
 # For use of wsl-notify-send.exe from https://github.com/stuartleeks/wsl-notify-send/
