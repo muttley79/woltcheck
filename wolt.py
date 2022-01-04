@@ -31,43 +31,45 @@ from shapely.geometry.polygon import Polygon
 
 sys.tracebacklimit = 0
 
-longitude = config.get('Location','workplace.longitude');
-latitude = config.get('Location','workplace.latitude');
+longitude = config.get('Location','workplace.longitude')
+latitude = config.get('Location','workplace.latitude')
 if (longitude == '' or latitude == ''):
-   print("No Workplace defined, workplace check will be ignored and checkup may be inaccurate");
+   print("No Workplace defined, workplace check will be ignored and checkup may be inaccurate")
 else:
-   work_location = Point(Decimal(longitude), Decimal(latitude));
+   work_location = Point(Decimal(longitude), Decimal(latitude))
 
-def alertmac(rest, title, newstate):
-    global rests;
-    wsl_notification_path = config.get('General','wsl.notification.path');
+def show_toast(rest, title, newstate):
+    global rests
+    wsl_notification_path = config.get('General','wsl.notification.path')
     if rests[rest] != newstate:
-       rests[rest] = newstate;
+       rests[rest] = newstate
        if exists("/usr/bin/osascript"):
-           notify("Wolt checker", title + " is " + rests[rest]);
+           notify("Wolt checker", title + " is " + rests[rest])
        if exists(wsl_notification_path + 'wsl-notify-send.exe'):
-           subprocess.call([wsl_notification_path + 'wsl-notify-send.exe','--appId',"Wolt Checker",'-c',"Restaurant status Changed",title + ' is now ' + newstate]);
+           subprocess.call([wsl_notification_path + 'wsl-notify-send.exe','--appId',"Wolt Checker",'-c',"Restaurant status Changed",title + ' is now ' + newstate])
+       if push=="true":
+           send_push(RESTNAME + " is " + newstate)    
 
 
        
           
-def isOpenNow(opening_times):
-    today = datetime.datetime.now().strftime("%A").lower();
+def is_open_now(opening_times):
+    today = datetime.datetime.now().strftime("%A").lower()
     if opening_times[today]==[]:
-       return False;
-    now = datetime.datetime.now();
+       return False
+    now = datetime.datetime.now()
     current=(((now.hour*60)+now.minute)*60000)
     for a in opening_times[today]:
         if a["value"]["$date"] > current:
            if a["type"] == "open":
-              return False;
+              return False
            else:
-              return True;
+              return True
         elif (len(opening_times[today])==1 or opening_times[today].index(a) == len(opening_times[today])-1):
            if a["type"] == "open":
-              return True;
+              return True
            else:
-              return False;
+              return False
 
 
 class bcolors:
@@ -81,7 +83,7 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-def sendpush(text):
+def send_push(text):
     conn = http.client.HTTPSConnection("api.pushover.net:443")
     conn.request("POST", "/1/messages.json",
     urllib.parse.urlencode({
@@ -91,71 +93,66 @@ def sendpush(text):
      }), { "Content-type": "application/x-www-form-urlencoded" })
     conn.getresponse()
 
-def locationAvailable(pointarray, point):
-    polygon = Polygon(pointarray);
-    return(polygon.contains(point));
+def location_available(pointarray, point):
+    polygon = Polygon(pointarray)
+    return(polygon.contains(point))
 
-def getEnglishName(arr,origname):
+def get_english_name(arr,origname):
     for a in arr:
         if a["lang"] == 'en':
-           return a["value"];
-    return origname;
+           return a["value"]
+    return origname
 
 
 arglist=sys.argv
 if len(arglist) < 2:
-    print("usage: wolt [-p] restaurant-name [restaurant-name] ...");
-    sys.exit(1);
+    print("usage: wolt [-p] restaurant-name [restaurant-name] ...")
+    sys.exit(1)
 
-arglist.pop(0);
+arglist.pop(0)
 push="false"
 if arglist[0] == '-p':
-    print("PUSH Mode");
-    push="true";
+    print("PUSH Mode")
+    push="true"
     arglist.pop(0)
 
 if len(arglist) == 0:
     print("No restaurant[s] supplied")
-    sys.exit(1);
+    sys.exit(1)
 
 rests={}
 for rest in arglist:
     print("Adding resturant "+rest+" for monitoring")
     rests[rest]="Closed"
 
-print();
+print()
 
 while(True):
     for rest in rests:
-        #print(rest);
-        JSON=json.loads(requests.get("https://restaurant-api.wolt.com/v3/venues/slug/"+rest).text);
-        RESTONLINE=JSON["results"][0]["online"];
-        RESTALIVE=JSON["results"][0]["alive"];
-        RESTDELV=JSON["results"][0]["delivery_specs"]["delivery_enabled"];
+        JSON=json.loads(requests.get("https://restaurant-api.wolt.com/v3/venues/slug/"+rest).text)
+        RESTONLINE=JSON["results"][0]["online"]
+        RESTALIVE=JSON["results"][0]["alive"]
+        RESTDELV=JSON["results"][0]["delivery_specs"]["delivery_enabled"]
         if 'work_location' in locals(): 
-             RESTTOLOCATION=locationAvailable(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location);
-        RESTNAME=getEnglishName(JSON["results"][0]["name"],rest);
-        RESTOPENHOURS=isOpenNow(JSON["results"][0]["opening_times"]);
+             RESTTOLOCATION=location_available(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location)
+        RESTNAME=get_english_name(JSON["results"][0]["name"],rest)
+        RESTOPENHOURS=is_open_now(JSON["results"][0]["opening_times"])
         if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLOCATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC);
-            alertmac(rest, RESTNAME, 'Open');
-            if push=="true":
-                sendpush(RESTNAME + " is Open");
-                print("Push sent");
-                sys.exit(0);
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC)
+            show_toast(rest, RESTNAME, 'Open')
         else:
-            alertmac(rest, RESTNAME, 'Closed');
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='');
+            show_toast(rest, RESTNAME, 'Closed')
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='')
             if RESTOPENHOURS == False:
-                print("(Outside of open hours)");
+                print("(Outside of open hours)")
             elif RESTONLINE == False:
-                print("(Offline)");
+                print("(Offline)")
             elif RESTALIVE != 1:
-                print("(Not Alive)");
+                print("(Not Alive)")
             elif RESTDELV == False:
-                print("(No Delivery)");
+                print("(No Delivery)")
             elif ('RESTTOLOCATION' in locals() and RESTTOLOCATION == False):
-                print("(Not delivering to our location)");
+                print("(Not delivering to our location)")
             else:
-                print('(Unknown reason, most likely coordinates)');
-    time.sleep(10);
+                print('(Unknown reason, most likely coordinates)')
+    time.sleep(10)
