@@ -97,7 +97,7 @@ def send_push(text):
     create_apobj(apobj, notifires)
     apobj.notify(
             body=text,
-            title='',
+            title='Restaurant state has changed',
             )
 
 def location_available(pointarray, point):
