@@ -10,12 +10,17 @@ from decimal import Decimal
 from os.path import exists
 import os
 import subprocess
+import apprise
+import asyncio
+
 
 CMD = '''
 on run argv
   display notification (item 2 of argv) with title (item 1 of argv)
 end run
 '''
+
+apobj = apprise.Apprise()
 
 def notify(title, text):
   subprocess.call(['osascript', '-e', CMD, title, text])
@@ -30,7 +35,8 @@ from shapely.geometry.polygon import Polygon
 
 
 sys.tracebacklimit = 0
-
+notifires = {}
+notifires = config.get('Push','push.notifiers')
 longitude = config.get('Location','workplace.longitude')
 latitude = config.get('Location','workplace.latitude')
 if (longitude == '' or latitude == ''):
@@ -51,7 +57,11 @@ def show_toast(rest, title, newstate):
            send_push(RESTNAME + " is " + newstate)    
 
 
-       
+def create_apobj(apobj, notifires):
+    if len(notifires)!=0:
+        for notifier in notifires.split():
+            apobj.add(notifier)
+    return apobj      
           
 def is_open_now(opening_times):
     today = datetime.datetime.now().strftime("%A").lower()
@@ -84,14 +94,11 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 def send_push(text):
-    conn = http.client.HTTPSConnection("api.pushover.net:443")
-    conn.request("POST", "/1/messages.json",
-    urllib.parse.urlencode({
-    "token": config.get('Push','push.token'),
-    "user": config.get('Push','push.user'),
-    "message": text,
-     }), { "Content-type": "application/x-www-form-urlencoded" })
-    conn.getresponse()
+    create_apobj(apobj, notifires)
+    apobj.notify(
+            body=text,
+            title='',
+            )
 
 def location_available(pointarray, point):
     polygon = Polygon(pointarray)
@@ -124,6 +131,9 @@ rests={}
 for rest in arglist:
     print("Adding resturant "+rest+" for monitoring")
     rests[rest]="Closed"
+
+
+
 
 print()
 
