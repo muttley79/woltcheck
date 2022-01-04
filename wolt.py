@@ -93,8 +93,10 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+create_apobj(apobj, notifires)
+
 def send_push(text):
-    create_apobj(apobj, notifires)
+#    create_apobj(apobj, notifires)
     apobj.notify(
             body=text,
             title='Restaurant state has changed',
