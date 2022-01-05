@@ -4,15 +4,12 @@ import time
 import requests
 import json
 import datetime
-import http.client, urllib
 import configparser
 from decimal import Decimal
 from os.path import exists
 import os
 import subprocess
 import apprise
-import asyncio
-
 
 CMD = '''
 on run argv
@@ -33,10 +30,9 @@ config.read('config.properties')
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
-
 sys.tracebacklimit = 0
-notifires = {}
-notifires = config.get('Push','push.notifiers')
+notifiers = {}
+notifiers = config.get('Push','push.notifiers')
 longitude = config.get('Location','workplace.longitude')
 latitude = config.get('Location','workplace.latitude')
 if (longitude == '' or latitude == ''):
@@ -56,10 +52,9 @@ def show_toast(rest, title, newstate):
        if push=="true":
            send_push(RESTNAME + " is " + newstate)    
 
-
-def create_apobj(apobj, notifires):
-    if len(notifires)!=0:
-        for notifier in notifires.split():
+def create_apobj(apobj, notifiers):
+    if len(notifiers)!=0:
+        for notifier in notifiers.split():
             apobj.add(notifier)
     return apobj      
           
@@ -81,7 +76,6 @@ def is_open_now(opening_times):
            else:
               return False
 
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -93,10 +87,9 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-create_apobj(apobj, notifires)
+create_apobj(apobj, notifiers)
 
 def send_push(text):
-#    create_apobj(apobj, notifires)
     apobj.notify(
             body=text,
             title='Restaurant state has changed',
@@ -111,7 +104,6 @@ def get_english_name(arr,origname):
         if a["lang"] == 'en':
            return a["value"]
     return origname
-
 
 arglist=sys.argv
 if len(arglist) < 2:
@@ -133,9 +125,6 @@ rests={}
 for rest in arglist:
     print("Adding resturant "+rest+" for monitoring")
     rests[rest]="Closed"
-
-
-
 
 print()
 
