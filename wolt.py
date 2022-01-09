@@ -10,6 +10,9 @@ from os.path import exists
 import os
 import subprocess
 import apprise
+import urllib.parse
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 CMD = '''
 on run argv
@@ -17,28 +20,46 @@ on run argv
 end run
 '''
 
+arglist=sys.argv
+if len(arglist) < 2:
+    print("usage: wolt [-p] restaurant-name [restaurant-name] ...")
+    sys.exit(1)
+
 apobj = apprise.Apprise()
 
 def notify(title, text):
   subprocess.call(['osascript', '-e', CMD, title, text])
 
-
 config = configparser.RawConfigParser()
 config.read('config.properties')
 
-# Must install shapely
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
+def get_location_from_freetext(freetext):
+    print("Attempting to get location from freetext: " + freetext)
+    getlocid = json.loads(requests.get("https://restaurant-api.wolt.com/v1/google/places/autocomplete/json?input="+urllib.parse.quote(freetext)).text)
+    place_id = getlocid["predictions"][0]["place_id"]
+    place_geo = json.loads(requests.get("https://restaurant-api.wolt.com/v1/google/geocode/json?place_id="+place_id).text)
+    # add check if not empty
+    global latitude,longitude
+    latitude = place_geo["results"][0]["geometry"]["location"]["lat"]
+    longitude = place_geo["results"][0]["geometry"]["location"]["lng"]
 
 sys.tracebacklimit = 0
 notifiers = {}
 notifiers = config.get('Push','push.notifiers')
-longitude = config.get('Location','workplace.longitude')
-latitude = config.get('Location','workplace.latitude')
-if (longitude == '' or latitude == ''):
-   print("No Workplace defined, workplace check will be ignored and checkup may be inaccurate")
+
+freetext = config.get('Location','location.freetext')
+if freetext == '':
+    longitude = config.get('Location','workplace.longitude')
+    latitude = config.get('Location','workplace.latitude')
+    if (longitude == '' or latitude == ''):
+       print("No Workplace defined, workplace check will be ignored and checkup may be inaccurate")
+    else:
+       work_location = Point(Decimal(longitude), Decimal(latitude))
+       print("Location: latitude " + str(latitude) + ", longitude " + str(longitude))
 else:
-   work_location = Point(Decimal(longitude), Decimal(latitude))
+    get_location_from_freetext(freetext)
+    work_location = Point(Decimal(longitude), Decimal(latitude))
+    print("Location: latitude " + str(latitude) + ", longitude " + str(longitude))
 
 def show_toast(rest, title, newstate):
     global rests
@@ -49,7 +70,7 @@ def show_toast(rest, title, newstate):
            notify("Wolt checker", title + " is " + rests[rest])
        if exists(wsl_notification_path + 'wsl-notify-send.exe'):
            subprocess.call([wsl_notification_path + 'wsl-notify-send.exe','--appId',"Wolt Checker",'-c',"Restaurant status Changed",title + ' is now ' + newstate])
-       if push=="true":
+       if push == True:
            send_push(RESTNAME + " is " + newstate)    
 
 def create_apobj(apobj, notifiers):
@@ -105,16 +126,11 @@ def get_english_name(arr,origname):
            return a["value"]
     return origname
 
-arglist=sys.argv
-if len(arglist) < 2:
-    print("usage: wolt [-p] restaurant-name [restaurant-name] ...")
-    sys.exit(1)
-
 arglist.pop(0)
-push="false"
+push=False
 if arglist[0] == '-p':
     print("PUSH Mode")
-    push="true"
+    push=True
     arglist.pop(0)
 
 if len(arglist) == 0:

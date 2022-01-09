@@ -1,4 +1,7 @@
 [Location]
+# Write your location in free text. lng/lat will be ignored if freetext is supplied
+location.freetext=
+# If freetext is not supplied, please add longitude and latitude otherwise the script will be inacurate
 # longitude & latitude can be obtain here: https://www.latlong.net
 workplace.longitude=
 workplace.latitude=

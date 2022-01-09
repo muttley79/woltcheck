@@ -6,7 +6,8 @@ Python script to check if a wolt restaurant is ready to deliver to your location
 Prerequisits:
 - Install shapely and configparser (python3 -m pip install shapely configparser apprise)
 - Install libgeos-dev (apt-get install libgeos-dev)
-- Add your location to properties file. You can find your longitude/latitude using this site https://www.latlong.net/
+- Add your location to properties file. You can add it as freetext or in longitude/latitude format. 
+  You can find your longitude/latitude using this site https://www.latlong.net/
 
 If you wold like to get a push to your phone, just add your provider to the config file under Push section.
 You can use one or more providers using the [Apprise](https://github.com/caronc/apprise) supported configs. 
