@@ -13,6 +13,8 @@ import apprise
 import urllib.parse
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
+import termcolor
+os.system('color')
 
 CMD = '''
 on run argv
@@ -97,17 +99,6 @@ def is_open_now(opening_times):
            else:
               return False
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 create_apobj(apobj, notifiers)
 
 def send_push(text):
@@ -155,11 +146,11 @@ while(True):
         RESTNAME=get_english_name(JSON["results"][0]["name"],rest)
         RESTOPENHOURS=is_open_now(JSON["results"][0]["opening_times"])
         if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLOCATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.OKGREEN + "Open" + bcolors.ENDC)
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Open", "green"))
             show_toast(rest, RESTNAME, 'Open')
         else:
             show_toast(rest, RESTNAME, 'Closed')
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + bcolors.FAIL + "Closed " + bcolors.ENDC, end='')
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Closed ", "red"), end='')
             if RESTOPENHOURS == False:
                 print("(Outside of open hours)")
             elif RESTONLINE == False:
