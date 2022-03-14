@@ -14,7 +14,8 @@ import urllib.parse
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import termcolor
-os.system('color')
+if os.name == 'nt':
+        os.system('color')
 
 CMD = '''
 on run argv
