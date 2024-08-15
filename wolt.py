@@ -87,9 +87,9 @@ def is_open_now(opening_times):
     if opening_times[today]==[]:
        return False
     now = datetime.datetime.now()
-    current=(((now.hour*60)+now.minute)*60000)
+    current=(((now.hour*60)+now.minute)*60)
     for a in opening_times[today]:
-        if a["value"]["$date"] > current:
+        if a["value"] > current:
            if a["type"] == "open":
               return False
            else:
@@ -138,20 +138,21 @@ print()
 
 while(True):
     for rest in rests:
-        JSON=json.loads(requests.get("https://restaurant-api.wolt.com/v3/venues/slug/"+rest).text)
-        RESTONLINE=JSON["results"][0]["online"]
-        RESTALIVE=JSON["results"][0]["alive"]
-        RESTDELV=JSON["results"][0]["delivery_specs"]["delivery_enabled"]
-        if 'work_location' in locals(): 
-             RESTTOLOCATION=location_available(JSON["results"][0]["delivery_specs"]["geo_range"]["coordinates"][0],work_location)
-        RESTNAME=get_english_name(JSON["results"][0]["name"],rest)
-        RESTOPENHOURS=is_open_now(JSON["results"][0]["opening_times"])
+        JSON=json.loads(requests.get(f"https://consumer-api.wolt.com/order-xp/web/v1/venue/slug/{rest}/dynamic/?lat={latitude}&lon={longitude}").text)
+        RESTONLINE=JSON["venue"]["online"]
+        RESTALIVE=JSON["venue_raw"]["alive"]
+        RESTDELV=JSON["venue"]["delivery_open_status"]["is_open"]
+        if 'work_location' in locals():
+             RESTTOLOCATION=location_available(JSON["venue_raw"]["delivery_specs"]["geo_range"]["coordinates"][0],work_location)
+        #RESTNAME=get_english_name(JSON["results"][0]["name"],rest)
+        RESTNAME=rest
+        RESTOPENHOURS=is_open_now(JSON["venue_raw"]["delivery_specs"]["delivery_times"])
         if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLOCATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Open", "green"))
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Open", "green", attrs=["bold"]))
             show_toast(rest, RESTNAME, 'Open')
         else:
             show_toast(rest, RESTNAME, 'Closed')
-            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Closed ", "red"), end='')
+            print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Closed ", "red", attrs=["bold"]), end='')
             if RESTOPENHOURS == False:
                 print("(Outside of open hours)")
             elif RESTONLINE == False:
