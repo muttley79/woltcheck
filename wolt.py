@@ -14,6 +14,7 @@ import urllib.parse
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import termcolor
+from bs4 import BeautifulSoup
 if os.name == 'nt':
         os.system('color')
 
@@ -80,7 +81,39 @@ def create_apobj(apobj, notifiers):
     if len(notifiers)!=0:
         for notifier in notifiers.split():
             apobj.add(notifier)
-    return apobj      
+    return apobj
+
+def retrieve_and_process_html(url):
+    # Step 1: Retrieve the HTML file from the URL
+    response = requests.get(url)
+    response.raise_for_status()  # Check for request errors
+
+    # Step 2: Parse the HTML content
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Find the script tag with the specific type and class
+    script_tag = soup.find('script', {'type': 'application/json', 'class': 'query-state'})
+    
+    if script_tag:
+        # Extract the content between the script tags
+        encoded_json_str = script_tag.string
+        
+        # Step 3: URL-decode the JSON content
+        if encoded_json_str:
+            decoded_json_str = urllib.parse.unquote(encoded_json_str)
+            
+            # Step 4: Parse the JSON content
+            try:
+                json_obj = json.loads(decoded_json_str)
+                return json_obj
+            except json.JSONDecodeError as e:
+                print("Error decoding JSON:", e)
+        else:
+            print("No content found in the script tag")
+    else:
+        print("Script tag not found")
+    return None
+
           
 def is_open_now(opening_times):
     today = datetime.datetime.now().strftime("%A").lower()
@@ -134,6 +167,14 @@ for rest in arglist:
     print("Adding resturant "+rest+" for monitoring")
     rests[rest]="Closed"
 
+
+global rest_names
+rest_names = {}
+print("Getting Restaurants names")
+for rest in rests:
+    full_detail_json = retrieve_and_process_html("https://wolt.com/en/isr/netanya/venue/"+rest)
+    rest_names[rest] = full_detail_json["queries"][4]["state"]["data"]["venue"]["name"]
+
 print()
 
 while(True):
@@ -145,7 +186,7 @@ while(True):
         if 'work_location' in locals():
              RESTTOLOCATION=location_available(JSON["venue_raw"]["delivery_specs"]["geo_range"]["coordinates"][0],work_location)
         #RESTNAME=get_english_name(JSON["results"][0]["name"],rest)
-        RESTNAME=rest
+        RESTNAME=rest_names[rest]
         RESTOPENHOURS=is_open_now(JSON["venue_raw"]["delivery_specs"]["delivery_times"])
         if ((RESTONLINE == True) and (RESTALIVE == 1) and (RESTDELV == True) and ('RESTTOLOCATION' in locals() and RESTTOLOCATION == True) and (RESTOPENHOURS == True)):
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Open", "green", attrs=["bold"]))
@@ -154,7 +195,7 @@ while(True):
             show_toast(rest, RESTNAME, 'Closed')
             print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " " + RESTNAME+" is " + termcolor.colored("Closed ", "red", attrs=["bold"]), end='')
             if RESTOPENHOURS == False:
-                print("(Outside of open hours)")
+                print("(Outside of openning hours)")
             elif RESTONLINE == False:
                 print("(Offline)")
             elif RESTALIVE != 1:
