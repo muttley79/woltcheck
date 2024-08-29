@@ -173,7 +173,10 @@ rest_names = {}
 print("Getting Restaurants names")
 for rest in rests:
     full_detail_json = retrieve_and_process_html("https://wolt.com/en/isr/netanya/venue/"+rest)
-    rest_names[rest] = full_detail_json["queries"][4]["state"]["data"]["venue"]["name"]
+    try:
+        rest_names[rest] = full_detail_json["queries"][4]["state"]["data"]["venue"]["name"]
+    except Exception as e:
+        rest_names[rest] = rest
 
 print()
 
