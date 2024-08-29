@@ -83,36 +83,38 @@ def create_apobj(apobj, notifiers):
             apobj.add(notifier)
     return apobj
 
-def retrieve_and_process_html(url):
-    # Step 1: Retrieve the HTML file from the URL
-    response = requests.get(url)
-    response.raise_for_status()  # Check for request errors
+# def retrieve_and_process_html(url):
+#     # Step 1: Retrieve the HTML file from the URL
+#     response = requests.get(url)
+#     response.raise_for_status()  # Check for request errors
 
-    # Step 2: Parse the HTML content
-    soup = BeautifulSoup(response.text, 'html.parser')
+#     # Step 2: Parse the HTML content
+#     soup = BeautifulSoup(response.text, 'html.parser')
 
-    # Find the script tag with the specific type and class
-    script_tag = soup.find('script', {'type': 'application/json', 'class': 'query-state'})
+#     # Find the script tag with the specific type and class
+#     script_tag = soup.find('script', {'type': 'application/json', 'class': 'query-state'})
     
-    if script_tag:
-        # Extract the content between the script tags
-        encoded_json_str = script_tag.string
+#     if script_tag:
+#         # Extract the content between the script tags
+#         encoded_json_str = script_tag.string
         
-        # Step 3: URL-decode the JSON content
-        if encoded_json_str:
-            decoded_json_str = urllib.parse.unquote(encoded_json_str)
+#         # Step 3: URL-decode the JSON content
+#         if encoded_json_str:
+#             decoded_json_str = urllib.parse.unquote(encoded_json_str)
             
-            # Step 4: Parse the JSON content
-            try:
-                json_obj = json.loads(decoded_json_str)
-                return json_obj
-            except json.JSONDecodeError as e:
-                print("Error decoding JSON:", e)
-        else:
-            print("No content found in the script tag")
-    else:
-        print("Script tag not found")
-    return None
+#             # Step 4: Parse the JSON content
+#             try:
+#                 json_obj = json.loads(decoded_json_str)
+#                 with open('data.json', 'w') as json_file:
+#                     json.dump(json_obj, json_file, indent=4)
+#                 return json_obj
+#             except json.JSONDecodeError as e:
+#                 print("Error decoding JSON:", e)
+#         else:
+#             print("No content found in the script tag")
+#     else:
+#         print("Script tag not found")
+#     return None
 
           
 def is_open_now(opening_times):
@@ -172,9 +174,14 @@ global rest_names
 rest_names = {}
 print("Getting Restaurants names")
 for rest in rests:
-    full_detail_json = retrieve_and_process_html("https://wolt.com/en/isr/netanya/venue/"+rest)
+    url = "https://consumer-api.wolt.com/order-xp/web/v1/pages/venue/slug/"+rest+"/static"
+    response = requests.get(url)
+    if response.status_code == 200:
+        # Parse the JSON content
+        data = response.json()
+        full_detail_json = data;
     try:
-        rest_names[rest] = full_detail_json["queries"][4]["state"]["data"]["venue"]["name"]
+        rest_names[rest] = full_detail_json["venue"]["name"]
     except Exception as e:
         rest_names[rest] = rest
 print()
