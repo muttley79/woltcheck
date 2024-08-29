@@ -177,7 +177,6 @@ for rest in rests:
         rest_names[rest] = full_detail_json["queries"][4]["state"]["data"]["venue"]["name"]
     except Exception as e:
         rest_names[rest] = rest
-
 print()
 
 while(True):
