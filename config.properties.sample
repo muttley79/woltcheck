@@ -10,6 +10,11 @@ workplace.latitude=
 # Using Apprise you can send notifications in mulriple channels.
 # Read here for more details: https://github.com/caronc/apprise
 push.notifiers=
+greenapi.instanceid=
+greenapi.token=
+greenapi.target=
+
+
 
 [General]
 # For use of wsl-notify-send.exe from https://github.com/stuartleeks/wsl-notify-send/
