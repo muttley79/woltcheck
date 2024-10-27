@@ -15,6 +15,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 import termcolor
 from bs4 import BeautifulSoup
+from whatsapp_api_client_python import API
 if os.name == 'nt':
         os.system('color')
 
@@ -23,6 +24,8 @@ on run argv
   display notification (item 2 of argv) with title (item 1 of argv)
 end run
 '''
+
+SEND_WHATSAPP = False
 
 arglist=sys.argv
 if len(arglist) < 2:
@@ -50,6 +53,14 @@ def get_location_from_freetext(freetext):
 sys.tracebacklimit = 0
 notifiers = {}
 notifiers = config.get('Push','push.notifiers')
+
+if config.get('Push','greenapi.instanceid') and config.get('Push','greenapi.token') and config.get('Push','greenapi.target'):
+    SEND_WHATSAPP = True
+    print("SEND_WHATSAPP")
+    greenAPI = API.GreenAPI(config.get('Push','greenapi.instanceid'), config.get('Push','greenapi.token'))
+
+
+
 
 freetext = config.get('Location','location.freetext')
 if freetext == '':
@@ -142,7 +153,10 @@ def send_push(text):
             body=text,
             title='Restaurant state has changed',
             )
-
+    if SEND_WHATSAPP:
+        message = f"*Restaurant state has changed*: \n {text}"
+        greenAPI.sending.sendMessage(config.get('Push','greenapi.target', message))
+        
 def location_available(pointarray, point):
     polygon = Polygon(pointarray)
     return(polygon.contains(point))
