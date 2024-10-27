@@ -1,0 +1,7 @@
+apprise
+configparser
+requests
+shapely
+beautifulsoup4
+whatsapp-api-client-python
+termcolor
