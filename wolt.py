@@ -56,7 +56,7 @@ notifiers = config.get('Push','push.notifiers')
 
 if config.get('Push','greenapi.instanceid') and config.get('Push','greenapi.token') and config.get('Push','greenapi.target'):
     SEND_WHATSAPP = True
-    print("SEND_WHATSAPP")
+    print("Whatsapp notification enabled")
     greenAPI = API.GreenAPI(config.get('Push','greenapi.instanceid'), config.get('Push','greenapi.token'))
 
 
