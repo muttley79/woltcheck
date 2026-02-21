@@ -2,7 +2,7 @@
 Python script to check if a wolt restaurant is ready to deliver to your location
 
 # **NOTE: This project is currently not active and not working.**
-** If someone is using it and already fixed, feel free to make PR
+** If someone is using it and already fixed, feel free to make PR **
 
 ![alt text](https://user-images.githubusercontent.com/6189366/147935485-932caef9-9c83-4541-9c1e-449eadd340a8.png?raw=true)
 
